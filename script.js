@@ -30,15 +30,19 @@ button.addEventListener("click", async () => {
   // TODO: Check if the user's input is empty, and if so:
   //       1. Display a helpful message asking them to enter a question
   //       2. Stop the function from continuing (exit early)
+ 
   //
   // GUIDANCE:
   // - Use an if statement to check if userQuestion is falsy (empty, null, etc.)
   // - Update the responseDiv element to show your message
   // - Use the return keyword to exit the function early
   // YOUR CODE HERE
-
+ if (!userQuestion) {
+      responseDiv.textContent = "Please enter a class topic or question to build your study guide.";
+    return;
+  }
   // Show loading message while waiting for AI
-  responseDiv.textContent = "Thinking...";
+    responseDiv.textContent = "Building your study guide...";
 
   // =====================================
   // STEP 4: Connect to the AI
@@ -54,39 +58,57 @@ button.addEventListener("click", async () => {
   try {
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       // TODO: Set the HTTP method to POST (this is required for sending data to the API)
-      // YOUR CODE HERE
+      method: "POST",
+      
       // TODO: Add a headers object with TWO properties:
       //       1. Content-Type header set to "application/json" (tells API we're sending JSON)
       //       2. Authorization header with format: "Bearer <your-api-key-variable>"
       //          Use template literals with ${} to insert your api_key variable
       //          ⚠️  The variable name you use here MUST exist in secrets.js!
-      // YOUR CODE HERE
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${api_key}`,
+      },
+
       // TODO: Add a body property that sends JSON data to the API
       //       Use JSON.stringify() to convert an object with these properties:
       //       - model: which AI model to use (use "gpt-3.5-turbo" for this lab)
       //       - messages: an array with ONE message object containing:
       //           * role: set to "user" (tells AI this is from the user)
       //           * content: use the userQuestion variable (the user's input)
-      // YOUR CODE HERE
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "user",
+            content: `You are a helpful study guide assistant. Give concise, accurate study support for this question: ${userQuestion}`,
+          },
+        ],
+      }),
+      
     });
 
     // TODO: Check if the API response was successful
     //       If not successful (!res.ok), throw an error with the status code
-    // YOUR CODE HERE
+    if (!res.ok) {
+      throw new Error(`HTTP error! Status: ${res.status}`);
+    }
 
     // TODO: Parse the JSON response from the API
     //       Store the result in a variable called 'data'
-    // YOUR CODE HERE
+    const data = await res.json();
 
     // TODO: Extract and display the AI's response
     //       OpenAI returns the message in: data.choices[0].message.content
     //       Set responseDiv.textContent to show this to the user
-    // YOUR CODE HERE
+    responseDiv.textContent = data.choices[0].message.content;
+    
   } catch (error) {
     // TODO: Handle errors gracefully by doing TWO things:
     //       1. Log the error to the console so you can debug (use console.error)
     //       2. Show a user-friendly error message in responseDiv
-    // YOUR CODE HERE
+    console.error(error);
+    responseDiv.textContent = "Sorry, I could not generate your study guide right now. Please try again.";
   }
 });
 
